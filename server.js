@@ -1,6 +1,6 @@
 // DUKTUR RP Oyuncu Portalı - bağımlılık yok (sadece Node 18+)
 const http=require('http'),fs=require('fs'),path=require('path'),c=require('crypto');
-const PORT=process.env.PORT||3000,KEY=process.env.GAME_KEY||'degistir-bunu',SECRET=process.env.SECRET||'degistir-secret';
+const PORT=process.env.PORT||3000,KEY=process.env.GAME_KEY||'duktur0029302',SECRET=process.env.SECRET||'duktur0029302';
 const F=path.join(__dirname,'data.json');
 let db={users:{},market:[],tickets:[],cmds:[],nid:1};
 try{db=JSON.parse(fs.readFileSync(F))}catch{}
@@ -47,7 +47,7 @@ http.createServer((q,s)=>{
   if(url.pathname==='/api/game/sync'){const u=db.users[url.searchParams.get('n')];
    if(u){u.cash=+url.searchParams.get('c')||0;u.level=+url.searchParams.get('l')||1;u.playtime+=+url.searchParams.get('t')||0;u.last=Date.now();save()}return out(200,'ok','text/plain')}
   const l=db.cmds.map(x=>`${x.t}|${x.n}|${x.a}`).join('\n');db.cmds=[];save();return out(200,l,'text/plain')}
- if(q.method==='GET'&&!k.startsWith('GET /api'))return out(200,fs.readFileSync(path.join(__dirname,'public/index.html')),'text/html; charset=utf-8');
+ if(q.method==='GET'&&!k.startsWith('GET /api'))return out(200,fs.readFileSync(path.join(__dirname,'index.html')),'text/html; charset=utf-8');
  let body='';q.on('data',d=>{body+=d;if(body.length>1e5)q.destroy()});
  q.on('end',()=>{try{const h=R[k];if(!h)return out(404,{e:'Yok'});
   const u=open.has(k)?null:auth((q.headers.authorization||'').replace('Bearer ',''));
