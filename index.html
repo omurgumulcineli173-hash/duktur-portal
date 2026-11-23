@@ -1,0 +1,48 @@
+<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DUKTUR RP</title>
+<style>
+:root{--p:#a855f7;--g:#ffffff12}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 15% 0,#35125f,#09090d 55%) fixed;color:#fff;font:15px system-ui,sans-serif;min-height:100vh}
+.app{display:flex;min-height:100vh}nav{width:210px;padding:18px 12px;background:#0008;border-right:1px solid var(--g);backdrop-filter:blur(14px);flex-shrink:0}
+nav h1{font-size:18px;color:var(--p);text-shadow:0 0 14px var(--p);margin:0 0 18px 8px}
+nav a{display:block;padding:11px 12px;border-radius:10px;color:#ccc;cursor:pointer;margin-bottom:3px}nav a:hover,nav a.on{background:#a855f733;color:#fff}
+main{flex:1;padding:20px;min-width:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.card{background:var(--g);border:1px solid #ffffff18;border-radius:16px;padding:16px;backdrop-filter:blur(12px);margin-bottom:12px;transition:.2s}.card:hover{border-color:var(--p);box-shadow:0 0 18px #a855f744}
+.big{font-size:24px;font-weight:700;color:var(--p)}small{color:#999}
+input,select,textarea,button{font:inherit;padding:10px;border-radius:10px;border:1px solid #ffffff25;background:#0007;color:#fff;margin:4px 0;width:100%}
+button{background:var(--p);border:0;cursor:pointer;font-weight:600;width:auto;padding:10px 18px}button:hover{filter:brightness(1.15)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}.err{color:#f66}.pos{color:#4ade80}.neg{color:#f87171}
+.auth{max-width:340px;margin:12vh auto;padding:0 16px}
+@media(max-width:700px){.app{flex-direction:column}nav{width:100%;display:flex;overflow-x:auto;padding:8px}nav h1{display:none}nav a{white-space:nowrap}}
+</style><body><div id="r"></div><script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fm=n=>'$'+Number(n).toLocaleString('tr-TR');let T=localStorage.t,me=null,pg='home';
+async function api(p,m='GET',b){const r=await fetch('/api/'+p,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+T},body:b?JSON.stringify(b):undefined});const j=await r.json();if(!r.ok)throw Error(j.e);return j}
+const val=id=>$('#'+id).value;
+async function act(fn){try{await fn();render()}catch(e){alert(e.message)}}
+function authView(){$('#r').innerHTML=`<div class=auth><h1 style="color:#a855f7;text-shadow:0 0 14px #a855f7">DUKTUR RP</h1><small>LIVE YOUR CHARACTER. BUILD YOUR STORY.</small><div class=card style=margin-top:16px>
+<input id=n placeholder="Oyun içi isim (Isim_Soyisim)"><input id=p type=password placeholder="Şifre"><div class=row><button onclick="go('login')">Giriş</button><button onclick="go('register')">Kayıt ol</button></div></div></div>`}
+async function go(t){try{T=(await api(t,'POST',{name:val('n'),pass:val('p')})).token;localStorage.t=T;render()}catch(e){alert(e.message)}}
+const P={
+async home(){const s=await api('status');return`<h2>Hoş geldin, ${esc(me.char?me.char.ad+' '+me.char.soyad:me.name)}</h2><div class=grid>
+<div class=card><small>Nakit</small><div class=big>${fm(me.cash)}</div></div><div class=card><small>Banka</small><div class=big>${fm(me.bank)}</div></div>
+<div class=card><small>Seviye</small><div class=big>${me.level}</div></div><div class=card><small>Oyun süresi</small><div class=big>${Math.floor(me.playtime/3600)} sa</div></div>
+<div class=card><small>Durum</small><div class=big>${me.online?'🟢 Oyunda':'⚫ Çevrimdışı'}</div></div><div class=card><small>Aktif oyuncu</small><div class=big>${s.online}</div></div></div>
+<div class=card><b>Son işlemler</b>${me.tx.slice(0,5).map(t=>`<div>${esc(t.t)} <span class="${t.a>0?'pos':'neg'}">${fm(t.a)}</span></div>`).join('')||'<small>Yok</small>'}</div>`},
+async char(){if(me.char){const c=me.char;return`<h2>Karakterim</h2><div class=card><div class=big>${esc(c.ad)} ${esc(c.soyad)}</div><div>${c.yas} yaş · ${c.cinsiyet}</div><p>${esc(c.hikaye)}</p></div>`}
+return`<h2>Karakter oluştur</h2><div class=card><div class=row><input id=ad placeholder=Ad><input id=soyad placeholder=Soyad></div><div class=row><input id=yas type=number placeholder=Yaş min=18><select id=cin><option>Erkek<option>Kadın</select></div><textarea id=hik rows=5 placeholder="Karakter hikâyesi"></textarea>
+<button onclick="act(async()=>{await api('character','POST',{ad:val('ad'),soyad:val('soyad'),yas:val('yas'),cinsiyet:val('cin'),hikaye:val('hik')})})">Oluştur</button></div>`},
+async bank(){return`<h2>Banka</h2><div class=grid><div class=card><small>Banka</small><div class=big>${fm(me.bank)}</div></div><div class=card><small>Nakit (oyun)</small><div class=big>${fm(me.cash)}</div></div></div>
+<div class=card><input id=am type=number placeholder=Miktar><div class=row><button onclick="act(()=>api('bank/deposit','POST',{amount:val('am')}))">Yatır</button><button onclick="act(()=>api('bank/withdraw','POST',{amount:val('am')}))">Çek</button></div>
+<input id=to placeholder="Alıcı oyuncu adı"><button onclick="act(()=>api('bank/transfer','POST',{to:val('to'),amount:val('am')}))">Gönder</button><br><small>Yatırma/çekme için oyunda olmalısın.</small></div>
+<div class=card><b>Hesap hareketleri</b>${me.tx.map(t=>`<div>${esc(t.t)} <span class="${t.a>0?'pos':'neg'}">${fm(t.a)}</span> <small>${new Date(t.d).toLocaleString('tr-TR')}</small></div>`).join('')}</div>`},
+async market(){const l=await api('market');return`<h2>Oyuncu Pazarı</h2><div class=card><div class=row><input id=ti placeholder="Başlık (örn. Infernus)"><input id=pr type=number placeholder=Fiyat><select id=ty><option>Araç<option>Ev<option>İşletme<option>Eşya</select></div><button onclick="act(()=>api('market','POST',{title:val('ti'),price:val('pr'),type:val('ty')}))">İlan ver</button></div>
+<input id=q placeholder=Ara oninput="document.querySelectorAll('.li').forEach(e=>e.style.display=e.textContent.toLowerCase().includes(this.value.toLowerCase())?'':'none')">
+${l.map(x=>`<div class="card li"><b>${esc(x.title)}</b> <small>${esc(x.type)} · ${esc(x.seller)}</small><div class=big>${fm(x.price)}</div><button onclick="act(()=>api('market/buy','POST',{id:${x.id}}))">Satın al</button></div>`).join('')||'<small>İlan yok</small>'}`},
+async top(){const l=await api('top');return`<h2>Sıralama · En zenginler</h2>${l.map((u,i)=>`<div class=card>#${i+1} <b>${esc(u.name)}</b> · Lv ${u.level} · ${fm(u.money)}</div>`).join('')}`},
+async ticket(){return`<h2>Destek</h2><div class=card><select id=kt><option>Şikayet<option>Bug<option>Ceza itirazı<option>Öneri</select><textarea id=ms rows=4 placeholder=Mesajın></textarea><button onclick="act(()=>api('ticket','POST',{kategori:val('kt'),mesaj:val('ms')}))">Gönder</button></div>
+${me.tickets.map(t=>`<div class=card><b>#${t.id} ${esc(t.kategori)}</b> <small>${esc(t.durum)}</small><p>${esc(t.mesaj)}</p></div>`).join('')}`}};
+const N={home:'🏠 Ana Sayfa',char:'🧍 Karakter',bank:'🏦 Banka',market:'🛒 Pazar',top:'🏆 Sıralama',ticket:'🎫 Destek'};
+async function render(){if(!T)return authView();try{me=await api('me')}catch{T='';localStorage.t='';return authView()}
+$('#r').innerHTML=`<div class=app><nav><h1>DUKTUR RP</h1>${Object.entries(N).map(([k,v])=>`<a class="${k==pg?'on':''}" onclick="pg='${k}';render()">${v}</a>`).join('')}<a onclick="T='';localStorage.t='';render()">🚪 Çıkış</a></nav><main>${await P[pg]()}</main></div>`}
+render();
+</script></body></html>
